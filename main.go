@@ -10,7 +10,9 @@ import (
 	"github.com/Dataman-Cloud/swan/api"
 	"github.com/Dataman-Cloud/swan/api/router"
 	"github.com/Dataman-Cloud/swan/api/router/application"
+	"github.com/Dataman-Cloud/swan/api/router/event"
 	"github.com/Dataman-Cloud/swan/backend"
+	"github.com/Dataman-Cloud/swan/eventmgr"
 	"github.com/Dataman-Cloud/swan/health"
 	"github.com/Dataman-Cloud/swan/manager/raft"
 	"github.com/Dataman-Cloud/swan/mesosproto/mesos"
@@ -202,6 +204,7 @@ func Start(c *cli.Context) {
 		health.NewHealthCheckManager(store, msgQueue),
 		msgQueue,
 		c,
+		eventmgr.NewEventCenter(),
 	)
 
 	backend := backend.NewBackend(sched, store)
@@ -210,6 +213,7 @@ func Start(c *cli.Context) {
 
 	routers := []router.Router{
 		application.NewRouter(backend),
+		event.NewRouter(backend),
 	}
 
 	srv.InitRouter(routers...)

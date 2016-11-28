@@ -1,7 +1,7 @@
 package types
 
 type Event struct {
-	ID      string `json:"ID"`
+	ID      string `json:"id"`
+	Type    string `json:"type"`
 	Message string `json:"message"`
-	Status  string `json:"status"`
 }

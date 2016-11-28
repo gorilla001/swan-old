@@ -29,19 +29,19 @@ func showApplication(c *cli.Context) error {
 		return fmt.Errorf("Task or App ID required")
 	}
 
-	httpClient := NewHTTPClient(fmt.Sprintf("%s/%s", "/v1/apps", c.Args()[0]))
+	httpClient := NewHTTPClient(fmt.Sprintf("/v1/apps/%s/tasks", c.Args()[0]))
 	resp, err := httpClient.Get()
 	if err != nil {
 		return fmt.Errorf("Unable to do request: %s", err.Error())
 	}
 	defer resp.Body.Close()
 
-	var app types.Application
-	if err := json.NewDecoder(resp.Body).Decode(&app); err != nil {
+	var tasks []*types.Task
+	if err := json.NewDecoder(resp.Body).Decode(&tasks); err != nil {
 		return err
 	}
 
-	data, err := json.Marshal(&app)
+	data, err := json.Marshal(&tasks)
 	if err != nil {
 		return err
 	}

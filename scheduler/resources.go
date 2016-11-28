@@ -1,7 +1,9 @@
 package scheduler
 
 import (
+	//"fmt"
 	"github.com/Dataman-Cloud/swan/mesosproto/mesos"
+	//	"github.com/Dataman-Cloud/swan/types"
 	"github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
 )
@@ -30,7 +32,11 @@ func createRangeResource(name string, begin, end uint64) *mesos.Resource {
 }
 
 func (s *Scheduler) BuildResources(cpus, mem, disk float64) []*mesos.Resource {
-	logrus.WithFields(logrus.Fields{"cpus": cpus, "mem": mem, "disk": disk}).Info("Building resources...")
+	logrus.WithFields(logrus.Fields{"cpus": cpus, "mem": mem, "disk": disk}).Info("Building resources")
+	//s.EventManager().Push(&types.Event{
+	//	Type:    "PROCESS",
+	//	Message: fmt.Sprintf("Building resources cpus(%.f) mem(%.f) disk(%.f)", cpus, mem, disk),
+	//})
 	var resources = []*mesos.Resource{}
 
 	if cpus > 0 {

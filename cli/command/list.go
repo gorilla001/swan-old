@@ -95,7 +95,7 @@ func printTable(apps []*types.Application) {
 			app.ID,
 			app.Name,
 			fmt.Sprintf("%d", app.Instances),
-			app.UserId,
+			app.RunAS,
 			app.ClusterId,
 			app.Status,
 			time.Unix(app.Created, 0).Format("2006-01-02 15:04:05"),

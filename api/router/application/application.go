@@ -37,10 +37,14 @@ func (r *Router) BuildApplication(w http.ResponseWriter, req *http.Request) erro
 		return errors.New("Applicaiton Id Duplicated")
 	}
 
-	user := req.Form.Get("user")
-	if user == "" {
-		user = "default"
+	runAs := version.RunAS
+	if runAs == "" {
+		runAs = "defaultGroup"
 	}
+	// runas := req.Form.Get("runas")
+	// if runas == "" {
+	// 	runas = "defaultGroup"
+	// }
 
 	application := types.Application{
 		ID:                version.ID,
@@ -49,7 +53,7 @@ func (r *Router) BuildApplication(w http.ResponseWriter, req *http.Request) erro
 		UpdatedInstances:  0,
 		RunningInstances:  0,
 		RollbackInstances: 0,
-		UserId:            user,
+		RunAS:             runAs,
 		ClusterId:         r.backend.ClusterId(),
 		Status:            "STAGING",
 		Created:           time.Now().Unix(),

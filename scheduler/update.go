@@ -1,11 +1,13 @@
 package scheduler
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/Dataman-Cloud/swan/mesosproto/mesos"
 	"github.com/Dataman-Cloud/swan/mesosproto/sched"
+	"github.com/Dataman-Cloud/swan/types"
 	"github.com/Sirupsen/logrus"
 )
 
@@ -47,7 +49,7 @@ func (s *Scheduler) status(status *mesos.TaskStatus) {
 		"ID":      ID,
 		"State":   state,
 		"Healthy": healthy,
-	}).Info("xxxxxxx")
+	}).Info("Received status update")
 
 	switch state {
 	case mesos.TaskState_TASK_STAGING:
@@ -62,6 +64,11 @@ func (s *Scheduler) status(status *mesos.TaskStatus) {
 		}
 	case mesos.TaskState_TASK_RUNNING:
 		STATUS = "RUNNING"
+		s.EventManager().Push(&types.Event{
+			ID:      appId,
+			Type:    "PROCESS",
+			Message: fmt.Sprintf("task %s get running", taskId),
+		})
 		if err := s.store.IncreaseApplicationRunningInstances(appId); err != nil {
 			logrus.Errorf("Updating application got error: %s", err.Error())
 		}
@@ -80,6 +87,12 @@ func (s *Scheduler) status(status *mesos.TaskStatus) {
 			if err := s.store.UpdateApplicationStatus(appId, "RUNNING"); err != nil {
 				logrus.Errorf("Updating application got error: %s", err.Error())
 			}
+			logrus.Infof("Application %s is running", appId)
+			s.EventManager().Push(&types.Event{
+				ID:      appId,
+				Type:    "FINISHED",
+				Message: fmt.Sprintf("Application %s get RUNNING", appId),
+			})
 		}
 
 	case mesos.TaskState_TASK_FINISHED:
@@ -87,6 +100,11 @@ func (s *Scheduler) status(status *mesos.TaskStatus) {
 		STATUS = "RESCHEDULING"
 	case mesos.TaskState_TASK_FAILED:
 		logrus.Infof("Task Failed, message: %s", status.GetMessage())
+		s.EventManager().Push(&types.Event{
+			ID:      appId,
+			Type:    "FINISHED",
+			Message: status.GetMessage(),
+		})
 		//STATUS = "RESCHEDULING"
 	case mesos.TaskState_TASK_KILLED:
 		logrus.Infof("Task Killed, message: %s", status.GetMessage())

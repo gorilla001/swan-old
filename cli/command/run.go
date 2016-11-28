@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Dataman-Cloud/swan/types"
+	"github.com/olekukonko/tablewriter"
 	"github.com/urfave/cli"
+	"io"
 	"io/ioutil"
 	"os"
 )
@@ -47,6 +49,10 @@ func NewRunCommand() cli.Command {
 				Name:  "disk",
 				Usage: "Disk limit for instance",
 				Value: 0,
+			},
+			cli.StringFlag{
+				Name:  "run-as",
+				Usage: "Run app as some role",
 			},
 			cli.StringFlag{
 				Name:  "network",
@@ -160,6 +166,13 @@ func runApplication(c *cli.Context) error {
 			}
 		}
 
+		if c.IsSet("run-as") {
+			runas := c.String("run-as")
+			if runas != "" {
+				version.RunAS = runas
+			}
+		}
+
 		if c.IsSet("network") {
 			network := c.String("network")
 			if network != "" {
@@ -202,7 +215,13 @@ func runApplication(c *cli.Context) error {
 			return errors.New("image can't be empty")
 		}
 
+		runas := c.String("run-as")
+		if runas == "" {
+			runas = "defaultGroup"
+		}
+
 		version.ID = name
+		version.RunAS = runas
 
 		forcePullImage := c.IsSet("force-pull-image")
 		privileged := c.IsSet("privileged")
@@ -246,5 +265,74 @@ func runApplication(c *cli.Context) error {
 		return fmt.Errorf("Unable to do request: %s", err.Error())
 	}
 
+	handleEvents(version.ID)
+
+	httpClient = NewHTTPClient(fmt.Sprintf("/v1/apps/%s/tasks", version.ID))
+	resp, err := httpClient.Get()
+	if err != nil {
+		return fmt.Errorf("Unable to do request: %s", err.Error())
+	}
+	defer resp.Body.Close()
+
+	var tasks []*types.Task
+	if err = json.NewDecoder(resp.Body).Decode(&tasks); err != nil {
+		return err
+	}
+
+	tb := tablewriter.NewWriter(os.Stdout)
+	tb.SetHeader([]string{
+		"APPNAME",
+		"TASKNAME",
+		"ADDRESS",
+	})
+
+	versionId := ""
+	versionID := version.ID
+
+	for _, task := range tasks {
+		tb.Append([]string{
+			versionID,
+			task.Name,
+			fmt.Sprintf("%s:%d", *task.AgentHostname, task.Port),
+		})
+		if versionId == "" {
+			versionId = versionID
+		}
+
+		if versionId != "" {
+			versionID = ""
+		}
+	}
+
+	fmt.Println("")
+	tb.Render()
+	fmt.Println("")
+
 	return nil
+}
+
+func handleEvents(name string) {
+	httpClient := NewHTTPClient("/v1/event")
+	resp, _ := httpClient.Get()
+	defer resp.Body.Close()
+
+	dec := json.NewDecoder(resp.Body)
+	for {
+		event := new(types.Event)
+		if err := dec.Decode(event); err != nil {
+			if err == io.EOF {
+				return
+			}
+			continue
+		}
+
+		//fmt.Fprintln(os.Stdout, event.Message)
+		if event.ID == name {
+			fmt.Fprintln(os.Stdout, event.Message)
+
+			if event.Type == "FINISHED" {
+				return
+			}
+		}
+	}
 }

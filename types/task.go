@@ -29,6 +29,7 @@ type Task struct {
 	AgentHostname *string `json:"agent_hostname"`
 	Status        string  `json:"status"`
 	AppId         string  `json:"app_id"`
+	Port          int     `json:"port"`
 
 	KillPolicy *KillPolicy `json:"kill_policy"`
 }

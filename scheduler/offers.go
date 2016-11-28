@@ -2,6 +2,7 @@ package scheduler
 
 import (
 	"errors"
+	//"fmt"
 	"github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
 	"net/http"
@@ -9,16 +10,25 @@ import (
 
 	"github.com/Dataman-Cloud/swan/mesosproto/mesos"
 	"github.com/Dataman-Cloud/swan/mesosproto/sched"
+	"github.com/Dataman-Cloud/swan/types"
 )
 
 func (s *Scheduler) RequestOffers(resources []*mesos.Resource) ([]*mesos.Offer, error) {
 	logrus.Info("Requesting offers")
+	//s.EventManager().Push(&types.Event{
+	//	Type:    "PROCESS",
+	//	Message: "Requesting offers",
+	//})
 
 	var event *sched.Event
 
 	select {
 	case event = <-s.GetEvent(sched.Event_OFFERS):
 	case <-time.After(time.Second * time.Duration(5)):
+		s.EventManager().Push(&types.Event{
+			Type:    "FINISHED",
+			Message: "Offer timeout",
+		})
 		return nil, errors.New("Offer timeout")
 	}
 
@@ -36,6 +46,10 @@ func (s *Scheduler) RequestOffers(resources []*mesos.Resource) ([]*mesos.Offer, 
 		}
 
 		if _, err := s.send(call); err != nil {
+			//s.EventManager().Push(&types.Event{
+			//	Type:    "FINISHED",
+			//	Message: fmt.Sprintf("Request offer failed: %s", err.Error()),
+			//})
 			logrus.Errorf("Request offer failed: %s", err.Error())
 			return nil, err
 		}
@@ -43,6 +57,10 @@ func (s *Scheduler) RequestOffers(resources []*mesos.Resource) ([]*mesos.Offer, 
 
 	}
 	logrus.Infof("Received %d offer(s).", len(event.Offers.Offers))
+	//s.EventManager().Push(&types.Event{
+	//	Type:    "PROCESS",
+	//	Message: fmt.Sprintf("Received %d offer(s).", len(event.Offers.Offers)),
+	//})
 
 	return event.Offers.Offers, nil
 }

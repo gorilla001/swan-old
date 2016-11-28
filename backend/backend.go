@@ -20,3 +20,7 @@ func NewBackend(sched *scheduler.Scheduler, store Store) *Backend {
 func (b *Backend) ClusterId() string {
 	return b.sched.ClusterId
 }
+
+func (b *Backend) Sched() *scheduler.Scheduler {
+	return b.sched
+}

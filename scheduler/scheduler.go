@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/Dataman-Cloud/swan/eventmgr"
 	"github.com/Dataman-Cloud/swan/health"
 	"github.com/Dataman-Cloud/swan/mesosproto/mesos"
 	sched "github.com/Dataman-Cloud/swan/mesosproto/sched"
@@ -37,11 +38,13 @@ type Scheduler struct {
 	HealthCheckManager *health.HealthCheckManager
 
 	cliContext *cli.Context
+
+	eventmgr *eventmgr.EventCenter
 }
 
 // NewScheduler returns a pointer to new Scheduler
 func NewScheduler(master string, fw *mesos.FrameworkInfo, store store.Store, clusterId string,
-	health *health.HealthCheckManager, queue chan types.ReschedulerMsg, c *cli.Context) *Scheduler {
+	health *health.HealthCheckManager, queue chan types.ReschedulerMsg, c *cli.Context, ec *eventmgr.EventCenter) *Scheduler {
 	return &Scheduler{
 		master:    master,
 		client:    client.New(master, "/api/v1/scheduler"),
@@ -63,6 +66,7 @@ func NewScheduler(master string, fw *mesos.FrameworkInfo, store store.Store, clu
 		HealthCheckManager: health,
 		ReschedQueue:       queue,
 		cliContext:         c,
+		eventmgr:           ec,
 	}
 }
 
@@ -219,4 +223,8 @@ func (s *Scheduler) handleEvents(resp *http.Response) {
 		}
 
 	}
+}
+
+func (s *Scheduler) EventManager() *eventmgr.EventCenter {
+	return s.eventmgr
 }

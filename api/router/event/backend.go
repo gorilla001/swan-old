@@ -1,8 +1,8 @@
-package application
+package event
 
 import (
-	"github.com/Dataman-Cloud/swan/scheduler"
 	"github.com/Dataman-Cloud/swan/types"
+	"net/http"
 )
 
 type Backend interface {
@@ -40,5 +40,5 @@ type Backend interface {
 
 	RollbackApplication(string) error
 
-	Sched() *scheduler.Scheduler
+	EventStream(http.ResponseWriter) error
 }

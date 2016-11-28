@@ -28,7 +28,7 @@ func (s *Scheduler) BuildTask(offer *mesos.Offer, version *types.Version, name s
 			return nil, fmt.Errorf("Application %s not found.", version.ID)
 		}
 
-		task.Name = fmt.Sprintf("%d.%s.%s.%s", app.Instances, app.ID, app.UserId, app.ClusterId)
+		task.Name = fmt.Sprintf("%d.%s.%s.%s", app.Instances, app.ID, app.RunAS, app.ClusterId)
 
 		if err := s.store.IncreaseApplicationInstances(app.ID); err != nil {
 			return nil, err
@@ -96,6 +96,12 @@ func (s *Scheduler) BuildTask(offer *mesos.Offer, version *types.Version, name s
 
 func (s *Scheduler) BuildTaskInfo(offer *mesos.Offer, resources []*mesos.Resource, task *types.Task) *mesos.TaskInfo {
 	logrus.Infof("Prepared task for launch with offer %s", *offer.GetId().Value)
+	s.EventManager().Push(&types.Event{
+		ID:      task.AppId,
+		Type:    "PROCESS",
+		Message: fmt.Sprintf("Prepared task for launch with offer %s", *offer.GetId().Value),
+	})
+
 	taskInfo := mesos.TaskInfo{
 		Name: proto.String(task.Name),
 		TaskId: &mesos.TaskID{
@@ -243,6 +249,10 @@ func (s *Scheduler) BuildTaskInfo(offer *mesos.Offer, resources []*mesos.Resourc
 // LaunchTasks lauch multiple tasks with specified offer.
 func (s *Scheduler) LaunchTasks(offer *mesos.Offer, tasks []*mesos.TaskInfo) (*http.Response, error) {
 	logrus.Infof("Launch %d tasks with offer %s", len(tasks), *offer.GetId().Value)
+	s.EventManager().Push(&types.Event{
+		Type:    "PROCESS",
+		Message: fmt.Sprintf("Launch %d tasks with offer %s", len(tasks), *offer.GetId().Value),
+	})
 	call := &sched.Call{
 		FrameworkId: s.framework.GetId(),
 		Type:        sched.Call_ACCEPT.Enum(),
@@ -267,6 +277,10 @@ func (s *Scheduler) LaunchTasks(offer *mesos.Offer, tasks []*mesos.TaskInfo) (*h
 
 func (s *Scheduler) KillTask(task *types.Task) (*http.Response, error) {
 	logrus.Infof("Kill task %s", task.Name)
+	s.EventManager().Push(&types.Event{
+		Type:    "PROCESS",
+		Message: fmt.Sprintf("Kill task %s", task.Name),
+	})
 	call := &sched.Call{
 		FrameworkId: s.framework.GetId(),
 		Type:        sched.Call_KILL.Enum(),

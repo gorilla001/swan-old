@@ -104,7 +104,7 @@ func (b *Backend) ScaleApplication(appId string, instances int) error {
 					}
 				}
 
-				name := fmt.Sprintf("%d.%s.%s.%s", app.Instances+i, app.ID, app.UserId, app.ClusterId)
+				name := fmt.Sprintf("%d.%s.%s.%s", app.Instances+i, app.ID, app.RunAS, app.ClusterId)
 
 				task, err := b.sched.BuildTask(choosedOffer, version, name)
 				if err != nil {

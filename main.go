@@ -21,15 +21,15 @@ import (
 )
 
 var (
-	addr    string
-	masters string
-	user    string
-	debug   bool
+	addr   string
+	master string
+	user   string
+	debug  bool
 )
 
 func init() {
 	flag.StringVar(&addr, "addr", "0.0.0.0:9999", "API Server address <ip:port>")
-	flag.StringVar(&masters, "masters", "127.0.0.1:5050", "masters address <ip:port>,<ip:port>...")
+	flag.StringVar(&master, "master", "127.0.0.1:5050", "master address <ip:port>,<ip:port>...")
 	flag.StringVar(&user, "user", "root", "mesos user")
 	flag.BoolVar(&debug, "debug", false, "log level")
 
@@ -64,7 +64,7 @@ func main() {
 
 	setupLogger()
 
-	store, err := NewBoltStore(".bolt.db")
+	store, err := NewBoltStore("/var/lib/swan/bolt.db")
 	if err != nil {
 		logrus.Errorf("Init store engine failed:%s", err)
 		return
@@ -84,7 +84,7 @@ func main() {
 
 	msgQueue := make(chan types.ReschedulerMsg, 1)
 
-	masters := []string{masters}
+	masters := []string{master}
 	masterUrls := make([]*url.URL, 0)
 	for _, master := range masters {
 		masterUrl, _ := url.Parse(fmt.Sprintf("http://%s", master))

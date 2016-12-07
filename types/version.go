@@ -48,7 +48,3 @@ type Volume struct {
 	HostPath      string `json:"hostPath,omitempty"`
 	Mode          string `json:"mode,omitempty"`
 }
-
-type KillPolicy struct {
-	Duration int64 `json:"duration"`
-}

@@ -18,14 +18,14 @@ import (
 
 // Scheduler represents a Mesos scheduler
 type Scheduler struct {
-	master    string
-	framework *mesos.FrameworkInfo
-	store     store.Store
-
+	master       string
+	framework    *mesos.FrameworkInfo
+	store        store.Store
 	client       *client.Client
 	doneChan     chan struct{}
 	ReschedQueue chan types.ReschedulerMsg
 	events       Events
+	tasks        []*types.Task
 
 	TaskLaunched int
 

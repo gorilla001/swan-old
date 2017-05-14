@@ -129,7 +129,7 @@ func (s *ApiServer) Start() error {
 		w.Write(output)
 	})
 
-	logrus.Printf("start listening on %s", s.listenAddr)
+	logrus.Printf("apiserver listening on %s", s.listenAddr)
 
 	srv := &http.Server{Addr: s.listenAddr, Handler: wsContainer}
 	s.server = srv
@@ -138,9 +138,22 @@ func (s *ApiServer) Start() error {
 }
 
 // gracefully shutdown.
+func (s *ApiServer) Shutdown() error {
+	// If s.server is nil, api server is not running.
+	if s.server != nil {
+		// NOTE(nmg): need golang 1.8+ to run this method.
+		return s.server.Shutdown(nil)
+	}
+
+	return nil
+}
+
 func (s *ApiServer) Stop() error {
-	// NOTE(nmg): need golang 1.8+ to run this method.
-	return s.server.Shutdown(nil)
+	if s.server != nil {
+		return s.server.Close()
+	}
+
+	return nil
 }
 
 func (s *ApiServer) NCSACommonLogFormatLogger() restful.FilterFunction {

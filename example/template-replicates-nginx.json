@@ -4,15 +4,15 @@
   "cmd": null,
   "args": null,
   "cpus": 0.2,
-  "mem": 300,
-  "disk": 100,
+  "mem": 5,
+  "disk": 10,
   "runAs": "xcm",
   "priority": 100,
   "instances": 5,
   "constraints":"" ,
   "container": {
     "docker": {
-      "image": "rails-app",
+      "image": "nginx",
       "network": "bridge",
       "forcePullImage": false,
       "privileged": true,
@@ -61,6 +61,6 @@
       "timeoutSeconds": 2,
       "consecutiveFailures": 10
     },
-  "cmd": "rails server -b 0.0.0.0"
+  "cmd": ""
 }
 
